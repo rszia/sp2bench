@@ -303,7 +303,7 @@ class RoBERTaTrainer:
 def main():
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('-exp_tag', action="store", dest="exp_tag", default='', type=str)
-    parser.add_argument('-language', action="store", dest="language", default='zh_debugging', type=str)
+    parser.add_argument('-language', action="store", dest="language", default='zh', type=str)
     parser.add_argument('-corpus_name', action="store", dest="corpus_name", default='spoken', type=str)
     parser.add_argument('-tok_name', action="store", dest="tok_name", default='sp', type=str)
     parser.add_argument('-tok_type', action="store", dest="tok_type", default='unigram', type=str)
