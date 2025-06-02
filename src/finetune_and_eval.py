@@ -226,7 +226,8 @@ class RoBERTaFineTuner:
         tokenized_split_dataset = split_dataset.map(lambda d : self.tokenize_and_align_labels(d, tok_column), batched=True)
         print("start run_complete_expe")
         model = AutoModelForTokenClassification.from_pretrained(self.checkpoint, num_labels=len(label_list), trust_remote_code=True)
-        model_name = re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag) +'-'+ str(fold)
+        # model_name = re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag) +'-'+ str(fold)
+        model_name = f"{os.path.basename(self.checkpoint)}{self.exp_tag}-{str(fold)}"
         
         print(model_name)
                  
@@ -268,7 +269,7 @@ class RoBERTaFineTuner:
         
         #model.to('cuda')                                      #####
         args = TrainingArguments(
-            self.models_folder+model_name+"-finetuned-"+task,
+            os.path.join(self.models_folder, model_name+"-finetuned-"+task),
             eval_strategy = "epoch",
             #evaluation_strategy = "no",
             save_strategy ="epoch",
@@ -322,7 +323,8 @@ class RoBERTaFineTuner:
             ]
         
         if error_analysis:
-            EXP_FOLDER = self.logs_folder + '/error_analysis_' + task+"_"+ re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag) + '/'
+            EXP_FOLDER = os.path.join(self.logs_folder, f'error_analysis_{task}_{os.path.basename(self.checkpoint)}{self.exp_tag}')
+            # EXP_FOLDER = self.logs_folder + '/error_analysis_' + task+"_"+ re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag) + '/'
             if not os.path.exists(EXP_FOLDER):
                 os.makedirs(EXP_FOLDER)
             EA_df = pd.DataFrame(tokenized_split_dataset["test"])
@@ -336,17 +338,14 @@ class RoBERTaFineTuner:
             gold_col = [item for row in EA_df['gold'] for item in row]
             EA_df = pd.DataFrame(list(zip(tokens_col, predict_col, gold_col)),
                            columns =['token', 'prediction', 'gold'])        
-            EA_df.to_csv(EXP_FOLDER+'simple_EA_'+str(fold)+'.csv')
+            # EA_df.to_csv(EXP_FOLDER+'simple_EA_'+str(fold)+'.csv')
+            EA_df.to_csv(os.path.join(EXP_FOLDER, 'simple_EA_'+str(fold)+'.csv'))
             
 
         if not keep_models:
-            shutil.move(self.models_folder+model_name+"-finetuned-"+task+'/trainer_state.json', EXP_FOLDER+'trainer_state_'+str(fold)+'.json')
-            shutil.rmtree(self.models_folder+model_name+"-finetuned-"+task)
-        # print("TRUE_PREDICTIONS\n", true_predictions)
-        # print("TRUE_LABELS\n", true_labels)
-        # print("METRIC")
-        # print(self.metric.compute(predictions=true_predictions, references=true_labels))
-        # assert(0)
+            shutil.move(os.path.join(self.models_folder, model_name+"-finetuned-"+task, 'trainer_state.json'), EXP_FOLDER+'trainer_state_'+str(fold)+'.json')
+            shutil.rmtree(os.path.join(self.models_folder, model_name+"-finetuned-"+task))
+
         return self.metric.compute(predictions=true_predictions, references=true_labels)
 
     def run_crossvalid(self, task, base_dataset, label_list, tok_column, weighted=False, verbose=True, error_analysis=False, keep_models=False):
@@ -382,16 +381,16 @@ class RoBERTaFineTuner:
 
         print('====')
         print(expe_name)
-        print('====')    
-           
-        m_name = re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag)
+        print('====')
+        m_name = os.path.basename(self.checkpoint) + self.exp_tag
+        # m_name = re.sub("(\./|/)", "_", self.checkpoint + self.exp_tag)
         print('running ' + str(m_name))
         res_cv = self.run_crossvalid(expe_name, ds, label_list, tok_column, 
                                     weighted=weighted, verbose=False, error_analysis=True, keep_models=False)
         print("RES_CV", "*\n"*3, res_cv)
         res_cv_df = pd.DataFrame(res_cv)
         res_cv_df['model'] = m_name
-        res_cv_df.to_csv(self.results_folder+expe_name+'_'+m_name+'_cv.csv')
+        res_cv_df.to_csv(os.path.join(self.results_folder, expe_name+'_'+m_name+'_cv.csv'))
 
         return 0
 
@@ -426,7 +425,7 @@ parser.add_argument('-max_length', action="store", dest="max_length", default = 
 parser.add_argument('-lr', action="store", dest="lr", default = 2e-5, type=float)
 
 parser.add_argument('-freeze_to', action="store", dest="freeze_to", default = 0.0, type=float)
-parser.add_argument('-results_dir', action="store", dest="results_dir", default = "./results/", type=str)
+parser.add_argument('-results_dir', action="store", dest="results_dir", default = "./results/results_token_classification", type=str)
 parser.add_argument('-models_dir', action="store", dest="models_dir", default = "./models/models_cleaned_ft", type=str)
 # parser.add_argument('-figs_dir', action="store", dest="figs_dir", default = "./figs/", type=str)
 

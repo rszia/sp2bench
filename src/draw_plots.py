@@ -4,11 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats
 import seaborn as sns
+import os
 
-def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", significance_pairs=None):
+def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", significance_pairs=None, results_dir="./results"):
     # Load data from all files
     data = []
     all_values = []
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
     
     for file_path in file_list:
         df = pd.read_csv(file_path)
@@ -61,7 +64,7 @@ def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", s
                     ha='center', va='bottom', fontsize=10)
     
     plt.tight_layout()
-    plt.savefig('box_plot.png', dpi=300, bbox_inches='tight')
+    plt.savefig(os.path.join(results_dir, 'box_plot.png'), dpi=300, bbox_inches='tight')
     plt.show()
     
     # Calculate and save mean and variance
@@ -74,8 +77,8 @@ def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", s
         })
     
     mean_var_df = pd.DataFrame(mean_var_data)
-    mean_var_df.to_csv('box_plot_mean_var.csv', index=False)
-    print("Mean and variance saved to box_plot_mean_var.csv")
+    mean_var_df.to_csv(os.path.join(results_dir, 'box_plot_mean_var.csv'), index=False)
+    # print(f"Mean and variance saved to {mean_var_path}")
     
     # Calculate p-values between all pairs
     p_value_data = []
@@ -93,24 +96,25 @@ def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", s
             })
     
     p_value_df = pd.DataFrame(p_value_data)
-    p_value_df.to_csv('box_plot_p_values.csv', index=False)
-    print("P-values saved to box_plot_p_values.csv")
+    p_value_df.to_csv(os.path.join(results_dir, 'box_plot_p_values.csv'), index=False)
     
+    print(f"Done with {title}. Saved to {results_dir}")
     return mean_var_df, p_value_df
 
-significance_pairs = [(0, 1, 'hi'), (0, 2, 'hello'), (1, 2, 'yes')]
+significance_pairs = [(0, 1, 'hi'), (0, 2, 'hello'), (1, 2, 'you can put custom text here. cool')]
 
-file_list = [
-    "./results/en_red__models_models_cleaned_en_spoken_sp_5e4_cv.csv",
-    "./results/fr_red__models_models_cleaned_fr_spoken_sp_5e4_cv.csv",
-    "./results/zh_red__models_models_cleaned_zh_spoken_sp_5e4_cv.csv"
-]
+for lge in ["en", "fr", "zh"]:
+    file_list = [
+        f"./results/results_token_classification/{lge}_red_{lge}_wiki_sp_5e4_cv.csv",
+        f"./results/results_token_classification/{lge}_red_{lge}_spoken_sp_5e4_cv.csv",
+        f"./results/results_token_classification/{lge}_red_{lge}_mixed_sp_5e4_cv.csv",
+    ]
 
-
-generate_box_plots(
-    task="red",
-    file_list=file_list,
-    x_labels=["en", "fr", "zh"],
-    title="My title",
-    significance_pairs=significance_pairs
-)
+    generate_box_plots(
+        task="red",
+        file_list=file_list,
+        x_labels=["wiki", "spoken", "mixed"],
+        title=f"{lge} red models",
+        significance_pairs=significance_pairs,
+        results_dir=f"./results/box_plot_{lge}"
+    )
