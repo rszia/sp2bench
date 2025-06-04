@@ -58,7 +58,7 @@ elif [ "$MODE" == "--finetune" ]; then
     -ckpt 'FacebookAI/xlm-roberta-base' -label_column red -lge fr
 
 elif [ "$MODE" == "--zeroshot" ]; then
-    python src.run_minicons.py
+    python src/run_minicons.py
 else
     echo "Usage: bash run.sh [--pretrain | --finetune | --zeroshot] "
     exit 1

@@ -6,6 +6,8 @@ from scipy import stats
 import seaborn as sns
 import os
 
+from itertools import combinations
+
 def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", significance_pairs=None, results_dir="./results"):
     # Load data from all files
     data = []
@@ -101,20 +103,110 @@ def generate_box_plots(task, file_list, x_labels, y_label="f-score", title="", s
     print(f"Done with {title}. Saved to {results_dir}")
     return mean_var_df, p_value_df
 
-significance_pairs = [(0, 1, 'hi'), (0, 2, 'hello'), (1, 2, 'you can put custom text here. cool')]
+# significance_pairs = [(0, 1, 'hi'), (0, 2, 'hello'), (1, 2, 'you can put custom text here. cool')]
 
-for lge in ["en", "fr", "zh"]:
-    file_list = [
-        f"./results/results_token_classification/{lge}_red_{lge}_wiki_sp_5e4_cv.csv",
-        f"./results/results_token_classification/{lge}_red_{lge}_spoken_sp_5e4_cv.csv",
-        f"./results/results_token_classification/{lge}_red_{lge}_mixed_sp_5e4_cv.csv",
-    ]
+# for lge in ["en", "fr", "zh"]:
+#     file_list = [
+#         f"./results/results_token_classification/{lge}_red_{lge}_wiki_sp_5e4_cv.csv",
+#         f"./results/results_token_classification/{lge}_red_{lge}_spoken_sp_5e4_cv.csv",
+#         f"./results/results_token_classification/{lge}_red_{lge}_mixed_sp_5e4_cv.csv",
+#         f"./results/results_token_classification/{lge}_red_xlm-roberta-base_cv.csv"
+#     ]
+
+#     generate_box_plots(
+#         task="red",
+#         file_list=file_list,
+#         x_labels=["wiki", "spoken", "mixed", "roberta-base"],
+#         title=f"{lge} red models",
+#         significance_pairs=significance_pairs,
+#         results_dir=f"./results/box_plot_{lge}"
+#     )
+
+### 
+df = pd.read_csv("./results/results_minimal_pair/disfl_comma_zh_results.csv")
+
+# Only keep the five relevant models
+models_of_interest = [
+    "zh_wiki_sp_5e4",
+    "zh_spoken_sp_5e4",
+    "zh_mixed_sp_5e4",
+    "xlm-roberta-base",
+    "xlm-roberta-large"
+]
+df = df[df['model'].isin(models_of_interest)]
+
+# Linguistics terms
+linguistics_terms = [
+    "dm_dial_att_replaced_zh",
+    "dm_dial_att_shuffled_zh",
+    "dm_dial_sem_replaced_zh",
+    "dm_dial_sem_shuffled_zh",
+    "dm_mono_sem_shuffled_zh",
+    "dm_mono_sem_replaced_zh",
+    "dm_mono_att_replaced_zh",
+    "dm_mono_att_shuffled_zh",
+    "filler_moved_zh",
+    "filler_shuffled_zh",
+    "filler_swapped_zh",
+    "pause_moved_zh",
+    "pause_shuffled_zh",
+    "rep_moved_zh",
+    "rep_shuffled_zh"
+]
+
+# Output path root
+base_output_dir = "./results/zeroshot_plots"
+
+# Iterate through each linguistic term
+for term in linguistics_terms:
+    term_df = df[df["linguistics_term"] == term]
+
+    # Prepare per-model CSVs
+    file_list = []
+    x_labels = []
+    model_data = []
+
+    for model in models_of_interest:
+        sub_df = term_df[term_df["model"] == model]
+        sub_df = sub_df.sort_values(by="UID")
+        values = []
+
+        # Collect 10 UIDs {term}_0 to {term}_9
+        for i in range(10):
+            uid = f"{term}_{i}"
+            row = sub_df[sub_df["UID"] == uid]
+            if not row.empty:
+                values.append(row["cond_score"].values[0])
+        
+        assert len(values) == 10, f"Incomplete data for model {model} on term {term}"
+        temp_df = pd.DataFrame({f"RED_f1": values})
+        temp_path = f"./temp_{term}_{model.replace('/', '_')}.csv"
+        temp_df.to_csv(temp_path, index=False)
+        file_list.append(temp_path)
+        x_labels.append(model)
+        model_data.append(values)
+
+    # Prepare significance stars (if p < 0.05)
+    significance_pairs = []
+    for i, j in combinations(range(len(model_data)), 2):
+        _, p_val = stats.ttest_ind(model_data[i], model_data[j])
+        if p_val < 0.05:
+            significance_pairs.append((i, j, "*"))
+
+    # Generate and save the plot
+    output_dir = os.path.join(base_output_dir, term)
+    os.makedirs(output_dir, exist_ok=True)
 
     generate_box_plots(
         task="red",
         file_list=file_list,
-        x_labels=["wiki", "spoken", "mixed"],
-        title=f"{lge} red models",
+        x_labels=x_labels,
+        title=f"Zero-shot F1 Comparison on {term}",
         significance_pairs=significance_pairs,
-        results_dir=f"./results/box_plot_{lge}"
+        results_dir=output_dir
     )
+
+# Cleanup temp files
+for file in os.listdir("."):
+    if file.startswith("temp_") and file.endswith(".csv"):
+        os.remove(file)
