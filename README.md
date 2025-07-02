@@ -25,3 +25,10 @@ bash run.sh --zeroshot
 ```
 
 ## Citation
+
+[Extending the BabyLM Initiative : Promoting Diversity in Datasets and Metrics through High-Quality Linguistic Corpora](https://aclanthology.org/2024.conll-babylm.12/) (Prévot et al., CoNLL-BabyLM 2024)
+
+[Spontaneous Speech Variables for Evaluating LLMs Cognitive Plausibility
+](https://arxiv.org/abs/2505.16277) (Wang et al., CMCL 2025)
+
+[Zero-Shot Evaluation of Conversational Language Competence in Data-Efficient LLMs Across English, Mandarin, and French](https://2025.sigdial.org/list-of-accepted-papers/) (Wang et al., SIGDIAL 2025)
