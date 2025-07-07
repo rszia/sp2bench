@@ -1,9 +1,16 @@
 # sp2bench
-WIP
-This repo contains the source code for the **sp2bench** benchmark.
+
+Spontaneous human speech exhibits a rich diversity of linguistic phenomena, such as the use of fillers (e.g., "uh") and discourse markers. These phenomena, absent from written text, may serve as a rich source to uncover the language processing mechanisms of humans.
+
+We present a benchmark covering a range of linguistic phenomena, extracted from high-quality spoken corpora in English, French, and Mandarin.
+
+To turn linguistic phenomena into prediction tasks, we provide different procedures accomodate for the nature of each task:
+
+- For tasks like *discourse markers* or *fillers*, the goal is to identify whether the placement of the discourse marker/filler is correct. Therefore, the benchmark is in the minimal pairs format -- one acceptable sentence (a genuine instance of the speech phenomenon) is paired with one unacceptable sentence (an unattested instance), and the model has to identify the acceptable one. You can follow the [zero-shot evaluation](#zeroshot) section below to run them.
+- Certain tasks, such as *prominence* or *reduction*, are better suited as token classification tasks. Here, the model will be given a sentence and asked whether each token exhibits the speech phenomenon. To evaluate on these tasks, it's needed to fine-tune the model beforehand. You can find an example in the [fine-tuning evaluation](#finetuning).
 
 ## Setup
-It's recommended to use conda. To set up the environment, run
+The code has been tested in a conda environment. To set it up, please run:
 ```
 conda env create -f environment.yml
 conda activate sp2bench
@@ -14,19 +21,27 @@ conda activate sp2bench
 ```
 bash run.sh --pretrain
 ```
-Now you have a pretrained model. To evaluate the model's adaquecy on a given speech phenomenon, there are two strategies to be chosen from depending on the task:
+See example usage in `run.sh`. The pretraining corpus is in the folder `./data/data_cleaned_txt/<language>`. You can specify the language to be en/zh/fr. 
 
-- For tasks like *prominence* or *reduction*, the model will be given a sentence and asked whether each token exhibits the speech phenomenon. It is essentially a token classification task.
-- For tasks like *discourse markers* or *fillers*, the benchmark is in the minimal pairs format. That is, one acceptable sentence (a genuine instance of the speech phenomenon) is paired with one unacceptable sentence (an unattested instance), and the model has to identify the acceptable one.
-
-### Fine-tune the model
-```
-bash run.sh --finetune
-```
-### Zero-shot evaluation on the benchmark
+## <a name="zeroshot"></a> Zero-shot evaluation
 
 ```
 bash run.sh --zeroshot
 ```
 
+## <a name="finetune"></a> Fine-tuning the model
+```
+bash run.sh --finetune
+```
+
 ## Citation
+
+For the context about BabyLM and fine-tuning experiments:
+- [Extending the BabyLM Initiative : Promoting Diversity in Datasets and Metrics through High-Quality Linguistic Corpora](https://aclanthology.org/2024.conll-babylm.12/) (Prévot et al., CoNLL-BabyLM 2024)
+
+- [Spontaneous Speech Variables for Evaluating LLMs Cognitive Plausibility
+](https://arxiv.org/abs/2505.16277) (Wang et al., CMCL 2025)
+
+For BLiMP-style, zero-shot experiments:
+
+- [Zero-Shot Evaluation of Conversational Language Competence in Data-Efficient LLMs Across English, Mandarin, and French](https://2025.sigdial.org/list-of-accepted-papers/) (Wang et al., SIGDIAL 2025)
