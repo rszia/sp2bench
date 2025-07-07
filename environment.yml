@@ -1,0 +1,18 @@
+name: sp2bench
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - conda-forge::sentencepiece
+  - datasets
+  - conda-forge::protobuf
+  - evaluate
+  - seqeval
+  - jupyter
+  - seaborn
+  - pytorch
+  - pip
+  - pip:
+    - accelerate>=0.26.0
+    - minicons

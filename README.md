@@ -3,7 +3,12 @@ WIP
 This repo contains the source code for the **sp2bench** benchmark.
 
 ## Setup
-TBA: requirements.txt
+It's recommended to use conda. To set up the environment, run
+```
+conda env create -f environment.yml
+conda activate sp2bench
+```
+
 ## How to run
 ### Pretrain a model from a given corpus 
 ```
